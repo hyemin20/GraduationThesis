@@ -1,0 +1,747 @@
+library(readxl)
+library(psych)
+library(lavaan)
+library(ltm)
+library(psy)
+library(dplyr)
+library(knitr)
+library(pastecs)
+library(mvnormtest)
+library(semPlot)
+library(semTools)
+library(Hmisc)
+library(car)
+
+#data
+ROKdata = read_excel("ROKdata.xlsx")
+summary(ROKdata)
+names(ROKdata)
+attach(ROKdata)
+
+#basic data
+round(stat.desc(ROKdata$(61:78),
+                basic = TRUE, 
+                desc = TRUE, 
+                norm = TRUE, 
+                p = 0.90) , 1)
+
+
+mshapiro.test(t(ROKdata[,c(2:59)])) # norm test
+
+
+#1. ROKC bind
+c1 = cbind(c11,c12,c13,c14,c15,c16)
+c2 = cbind(c21,c22,c23,c24,c25,c26)
+c3 = cbind(c31,c32,c33,c34,c35,c36)
+c4 = cbind(c41,c42,c43,c44,c45,c46)
+c5 = cbind(c51,c52,c53,c54,c55,c56)
+c = cbind(c1 + c2 + c3 + c4 + c5)
+
+#2. EP bind
+p1 = cbind(p11,p12,p13)
+p2 = cbind(p21,p22,p23)
+p3 = cbind(p31,p32,p33)
+p = cbind(p1+p2+p3)
+
+#3. EO bind
+id = cbind(id1,id2,id3,id4)
+
+ad1 = cbind(ad11,ad12,ad13)
+ad2 = cbind(ad21,ad22,ad23)
+ad3 = cbind(ad31,ad32,ad33)
+ad4 = cbind(ad41,ad42,ad43)
+ad = cbind(ad1 + ad2 + ad3 + ad4)
+
+pd = cbind(pd1,pd2,pd3,pd4)
+
+eo = cbind(id + ad + pd)
+
+
+# cor test
+#1. ROKC cor
+cor.test(c1,c2)      
+cor.test(c1,c3)
+cor.test(c1,c4)
+cor.test(c1,c5)
+cor.test(c2,c3)
+cor.test(c2,c4)
+cor.test(c2,c5)
+cor.test(c3,c4)
+cor.test(c3,c5)
+cor.test(c4,c5)
+cor.test(c,c1)
+cor.test(c,c2)
+cor.test(c,c3)
+cor.test(c,c4)
+cor.test(c,c5)
+
+cor.test(c,p1)
+
+
+rcorr(c, type = "pearson")
+cor(c,p, method = "pearson")
+
+#2. EP cor
+cor.test(p1,p2)      
+cor.test(p1,p3)
+cor.test(p2,p3)
+cor.test(p,p1)
+cor.test(p,p2)
+cor.test(p,p3)
+
+#3. EO cor
+cor.test(id1, id2)
+cor.test(id1, id3)
+cor.test(id1, id4)
+cor.test(id2, id3)
+cor.test(id2, id4)
+cor.test(id3, id4)
+
+
+cor.test(ad1, ad2)
+cor.test(ad1, ad3)
+cor.test(ad1, ad4)
+cor.test(ad2, ad3)
+cor.test(ad2, ad4)
+cor.test(ad3, ad4)
+cor.test(ad, ad1)
+cor.test(ad, ad2)
+cor.test(ad, ad3)
+cor.test(ad, ad4)
+
+cor.test(pd1, pd2)
+cor.test(pd1, pd3)
+cor.test(pd1, pd4)
+cor.test(pd2, pd3)
+cor.test(pd2, pd4)
+cor.test(pd3, pd4)
+cor.test(pd, pd1)
+cor.test(pd, pd2)
+cor.test(pd, pd3)
+cor.test(pd, pd4)
+
+cor.test(id, ad)
+
+
+## cfa
+#model fit1
+ROKmodel <- 'c1 =~ c11+c12+c13+c14+c15+c16
+          c2 =~ c21+c22+c23+c24+c25+c26
+          c3 =~ c31+c32+c33+c34+c35+c36
+          c4 =~ c41+c42+c43+c44+c45+c46
+          c5 =~ c51+c52+c53+c54+c55+c56'
+ROKfit <- cfa(ROKmodel, data = ROKdata, estimator = "MLM")
+lavInspect(ROKfit,"cov.lv")
+summary(ROKfit, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+
+#reliability
+ROK_R <- reliability(ROKfit,return.total = TRUE)
+ROK_R
+
+#rigthness
+sqrt(ROK_R[5,])
+
+#modindices
+modindices(ROKfit)
+modindices(ROKfit) %>%
+  filter(op=="=~") %>%
+  kable(digits=3, format="pandoc", 
+        caption="Modification Indices for Factor Loadings")
+modindices(ROKfit, sort.=TRUE, minimum.value=10)
+
+standardizedsolution(ROKfit)  
+resid.ROKfit <- residuals(ROKfit, type="cor")$cov
+resid.ROKfit[upper.tri(resid.cor, diag=TRUE)] <- NA
+kable(resid.ROKfit, digits=2, format="pandoc", caption="Residual Correlations")
+
+#graphic_ROKfit
+diagra_ROK <- semPlot::semPaths(ROKfit, whatLabels = "std", intercepts = FALSE,
+                                style = "lisrel",
+                                nCharNodes = 0,
+                                nCharEdges = 0,
+                                edge.color = "blue",
+                                curveAdjacent = TRUE, title = TRUE,
+                                layout = "tree", curvePivot = TRUE)
+
+#model fit2
+ROKmodel_2 <- 'c1 =~ c11+c12+c13+c14+c15+c16
+          c2 =~ c21+c22+c23+c24+c25+c26
+          c3 =~ c31+c32+c33+c34+c35+c36
+          c4 =~ c41+c42+c43+c44+c45+c46
+          c5 =~ c51+c52+c53+c54+c55+c56
+          ROKC =~ c1+c2+c3+c4+c5'
+ROKfit_2 <- cfa(ROKmodel_2, data = ROKdata, estimator = "MLM")
+lavInspect(ROKfit_2,"cov.lv")
+summary(ROKfit_2, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+
+#model fit3
+ROKmodel_3 <- 'c1 =~ c11+c12+c13+c14+c15+c16
+          c2 =~ c21+c22+c23+c24+c25+c26
+          c3 =~ c31+c32+c33+c34+c35+c36
+          c4 =~ c41+c42+c43+c44+c45+c46
+          c5 =~ c51+c52+c53+c54+c55+c56
+          ROKC =~ c1+c2+c3+c4+c5
+          c3 ~~ 0.05*c3
+          c11 ~~ c12
+          c12 ~~ c13
+          c13 ~~ c14
+          c14 ~~ c15
+          c15 ~~ c16
+          c21 ~~ c22
+          c22 ~~ c23
+          c23 ~~ c24
+          c24 ~~ c25
+          c25 ~~ c26
+          c31 ~~ c32
+          c32 ~~ c33
+          c33 ~~ c34
+          c34 ~~ c35
+          c35 ~~ c36
+          c41 ~~ c42
+          c42 ~~ c43
+          c43 ~~ c44
+          c44 ~~ c45
+          c45 ~~ c46
+          c51 ~~ c52
+          c52 ~~ c53
+          c53 ~~ c54
+          c54 ~~ c55
+          c55 ~~ c56' 
+
+ROKfit_3 <- cfa(ROKmodel_3, data = ROKdata, estimator = "MLM")
+lavInspect(ROKfit_2,"cov.lv")
+summary(ROKfit_3, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE)
+
+#reliability
+ROK_R_2 <- reliability(ROKfit_2,return.total = TRUE)
+ROK_R_2
+
+#rigthness
+sqrt(ROK_R_2[5,])
+
+
+#graphic_ROKfit
+diagra_ROK_2 <- semPlot::semPaths(ROKfit_3, whatLabels = "std", intercepts = FALSE,
+                                  style = "lisrel",
+                                  nCharNodes = 0,
+                                  nCharEdges = 0,
+                                  edge.color = "blue",
+                                  curveAdjacent = TRUE, title = TRUE,
+                                  layout = "tree", curvePivot = TRUE)
+
+
+#2 EP fit
+EPmodel1 <- "p1 =~ p11+p12+p13
+            p2 =~ p21+p22+p23
+            p3 =~ p31+p32+p33
+            EP =~ p1+p2+p3
+            p2 ~~ 0.05*p2"
+
+EPfit1 <- cfa(EPmodel1, data = ROKdata, estimator = "MLM")
+fitted(EPfit)
+lavInspect(EPfit,"cov.lv")
+summary(EPfit1, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+
+
+
+#vif
+install.packages("car")
+library(car)
+vif()
+
+#modindices
+modindices(EPfit1)
+modindices(ROKfit) %>%
+  filter(op=="=~") %>%
+  kable(digits=3, format="pandoc", 
+        caption="Modification Indices for Factor Loadings")
+modindices(EPfit1, sort.=TRUE, minimum.value=5)
+
+
+#fix EPmodel1
+EPmodel2 <- "p1 =~ p11+p12+p13
+            p2 =~ p21+p22+p23
+            p3 =~ p31+p32+p33
+            EP =~ p1+p2+p3
+            p2 ~~ 0.05*p2
+            p13 ~~ p22
+            p21 ~~ p31"
+
+#fix EPmodel2
+EPmodel3 <- "p1 =~ p11+p12+p13
+            p2 =~ p21+p22+p23
+            p3 =~ p31+p32+p33
+            EP =~ p1+p2+p3
+            p2 ~~ 0.05*p2
+            p3 ~~ 0.05*p3
+            p11 ~~ p12
+            p12 ~~ p13
+            p21 ~~ p22
+            p22 ~~ p23
+            p31 ~~ p32
+            p32 ~~ p33"
+
+EPfit3 <- cfa(EPmodel3, data = ROKdata, estimator = "MLM")
+fitted(EPfit2)
+lavInspect(EPfit2,"cov.lv")
+summary(EPfit3, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+anova(EPfit1, EPfit3, estimator = "MLM")
+
+#graphic_EP
+diagram_EP <- semPlot::semPaths(EPfit3, whatLabels = "std", intercepts = FALSE,
+                                style = "lisrel",
+                                nCharNodes = 0,
+                                nCharEdges = 0,
+                                edge.color = "blue",
+                                curveAdjacent = TRUE, title = TRUE,
+                                layout = "tree", curvePivot = TRUE)
+
+
+#fix EPmodel2
+EPmodel4 <- "p1 =~ p11+p12+p13
+            p2 =~ p21+p22+p23
+            p3 =~ p31+p32+p33
+            EP =~ p1+p2+p3
+            p2 ~~ 0.05*p2
+            p3 ~~ 0.05*p3
+            p11 ~~ p12 + p13
+            p21 ~~ p23 + p22
+            p31 ~~ p32 + p33"
+
+EPfit4 <- cfa(EPmodel4, data = ROKdata, estimator = "MLM")
+fitted(EPfit2)
+lavInspect(EPfit2,"cov.lv")
+summary(EPfit4, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+anova(EPfit1, EPfit4, estimator = "MLM")
+
+#graphic_EP
+diagram_EP <- semPlot::semPaths(EPfit4, whatLabels = "std", intercepts = FALSE,
+                                style = "lisrel",
+                                nCharNodes = 0,
+                                nCharEdges = 0,
+                                edge.color = "blue",
+                                curveAdjacent = TRUE, title = TRUE,
+                                layout = "tree", curvePivot = TRUE)
+
+#reliability
+EP_R1 <- reliability(EPfit1)
+EP_R1
+
+EP_R2 <- reliability(EPfit2,return.total = TRUE)
+EP_R2
+
+#rigthness
+sqrt(EP_R[5,])
+
+
+standardizedsolution(ROKfit)  
+resid.EPfit2 <- residuals(EPfit2, type="cor")$cov
+resid.ROKfit[upper.tri(resid.cor, diag=TRUE)] <- NA
+kable(resid.EPfit2, digits=2, format="pandoc", caption="Residual Correlations")
+
+#graphic_EP
+diagram_EP <- semPlot::semPaths(EPfit2, whatLabels = "std", intercepts = FALSE,
+                                style = "lisrel",
+                                nCharNodes = 0,
+                                nCharEdges = 0,
+                                edge.color = "blue",
+                                curveAdjacent = TRUE, title = TRUE,
+                                layout = "tree", curvePivot = TRUE)
+
+#교육??????
+admodel <- "ad1 =~ ad11+ad12+ad13
+            ad2 =~ ad21+ad22+ad23
+            ad3 =~ ad31+ad32+ad33
+            ad4 =~ ad41+ad42+ad43
+            ad =~ ad1+ad2+ad3+ad4"
+
+adfit <- cfa(admodel, data = ROKdata, estimator = "MLM")
+fitted(EOfit)
+summary(adfit, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE)
+
+#ad2
+admodel2 <- "ad1 =~ ad11+ad12+ad13
+            ad2 =~ ad21+ad22+ad23
+            ad3 =~ ad31+ad32+ad33
+            ad4 =~ ad41+ad42+ad43
+            ad =~ ad1+ad2+ad3+ad4
+            ad11 ~~ ad12
+            ad12 ~~ ad13
+            ad21 ~~ ad22
+            ad22 ~~ ad23
+            ad31 ~~ ad32
+            ad32 ~~ ad33
+            ad41 ~~ ad42
+            ad42 ~~ ad43"
+
+adfit_2 <- cfa(admodel2, data = ROKdata, estimator = "MLM")
+fitted(EOfit)
+summary(adfit_2, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+
+#graphic_ROKfit
+diagram_ad <- semPlot::semPaths(adfit_2, whatLabels = "std", intercepts = FALSE,
+                                style = "lisrel",
+                                nCharNodes = 0,
+                                nCharEdges = 0,
+                                edge.color = "blue",
+                                curveAdjacent = TRUE, title = TRUE,
+                                layout = "tree", curvePivot = TRUE)
+
+#reliability
+ad_R <- reliability(adfit, return.total = TRUE)
+ad_R
+
+
+EOmodel <- "ad1 =~ ad11+ad12+ad13
+            ad2 =~ ad21+ad22+ad23
+            ad3 =~ ad31+ad32+ad33
+            ad4 =~ ad41+ad42+ad43
+            ad =~ ad1+ad2+ad3+ad4
+            pd =~ pd1+pd2+pd3+pd4
+            id =~ id1+id2+id3+id4
+            EO =~ id+ad+pd
+            id ~~ 0.05*id
+            pd ~~ 0.05*pd"
+
+EOfit <- cfa(EOmodel, data = ROKdata, estimator = "MLM")
+fitted(EOfit)
+lavInspect(EOfit,"cov.lv")
+summary(EOfit, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+fitMeasures(EPfit, c("chisq", "df", "pvalue", "gfi", "rmsea", "cfi"))
+
+#reliability
+EO_R <- reliability(EOfit)
+EO_R
+
+#rigthness
+sqrt(EO_R[5,])
+
+#modindices
+modindices(EOfit)
+modindices(EOfit) %>%
+  filter(op=="=~") %>%
+  kable(digits=3, format="pandoc", 
+        caption="Modification Indices for Factor Loadings")
+modindices(EOfit, sort.=TRUE, minimum.value=10)
+
+standardizedsolution(ROKfit)  
+resid.ROKfit <- residuals(ROKfit, type="cor")$cov
+resid.ROKfit[upper.tri(resid.cor, diag=TRUE)] <- NA
+kable(resid.ROKfit, digits=2, format="pandoc", caption="Residual Correlations")
+
+#graphic_ROKfit
+diagram_EO <- semPlot::semPaths(EOfit, whatLabels = "std", intercepts = FALSE,
+                                style = "lisrel",
+                                nCharNodes = 0,
+                                nCharEdges = 0,
+                                edge.color = "blue",
+                                curveAdjacent = TRUE, title = TRUE,
+                                layout = "tree", curvePivot = TRUE)
+
+#data binding
+attach(ROKdata)
+ROKdata$c1R = (c11+c12+c13+c14+c15+c16)/6 
+ROKdata$c2R = (c21+c22+c23+c24+c25+c26)/6
+ROKdata$c3R = (c31+c32+c33+c34+c35+c36)/6
+ROKdata$c4R = (c41+c42+c43+c44+c45+c46)/6
+ROKdata$c5R = (c51+c52+c53+c54+c55+c56)/6
+ROKdata$cR = (c1R+c2R+c3R+c4R+c5R)/5
+
+attach(ROKdata)
+ROKdata$p1R = (p11+p12+p13)/3
+ROKdata$p2R = (p21+p22+p23)/3
+ROKdata$p3R = (p31+p32+p33)/3
+ROKdata$pR = (p1R+p2R+p3R)/3
+
+attach(ROKdata)
+ROKdata$ad1R = (ad11+ad12+ad13)/3
+ROKdata$ad2R = (ad21+ad22+ad23)/3
+ROKdata$ad3R = (ad31+ad32+ad33)/3
+ROKdata$ad4R = (ad41+ad42+ad43)/3
+
+attach(ROKdata)
+ROKdata$adR = (ad1R + ad2R + ad3R + ad4R)/4
+ROKdata$pdR = (pd1 + pd2 + pd3+ pd4)/4
+ROKdata$idR = (id1 + id2 + id3 + id4)/4
+ROKdata$eoR = (adR+pdR+idR)/3
+
+#cor_eo
+attach(ROKdata)
+cor.test(idR,adR)
+cor.test(idR,pdR)
+cor.test(adR,pdR)
+cor.test(idR,eoR)
+cor.test(adR,eoR)
+cor.test(pdR,eoR)
+
+#describe
+describe(ROKdata$c1R) # describe data
+describeBy(ROKdata[, 53:78])
+
+#cfa.model
+cfa.ROK_R <- "
+          ROKC =~ c1R+c2R+c3R+c4R+c5R
+          
+          EP =~ p1R+p2R+p3R
+          
+          EO =~ idR+adR+pdR"
+
+cfa.ROK2 <- "
+          ROKC =~ c1+c2+c3+c4+c5
+          
+          EP =~ p1+p2+p3
+
+          EO =~ id+ad+pd"
+
+cfa.fit_R <- cfa(model = cfa.ROK_R, data = ROKdata)
+summary(cfa.fit_R, fit.measures=TRUE, standardized = TRUE, rsquare = TRUE) 
+
+#cor.test2 - cR/pR
+attach(ROKdata)
+cor.test(cR, pR)
+cor.test(cR, p1R)
+cor.test(cR, p2R)
+cor.test(cR, p3R)
+cor.test(c1R, pR)
+cor.test(c1R, p1R)
+cor.test(c1R, p2R)
+cor.test(c1R, p3R)
+cor.test(c2R, pR)
+cor.test(c2R, p1R)
+cor.test(c2R, p2R)
+cor.test(c2R, p3R)
+cor.test(c3R, pR)
+cor.test(c3R, p1R)
+cor.test(c3R, p2R)
+cor.test(c3R, p3R)
+cor.test(c4R, pR)
+cor.test(c4R, p1R)
+cor.test(c4R, p2R)
+cor.test(c4R, p3R)
+cor.test(c5R, pR)
+cor.test(c5R, p1R)
+cor.test(c5R, p2R)
+cor.test(c5R, p3R)
+
+#cor.test3 - CR / eoR
+cor.test(cR, eoR)
+cor.test(cR, idR)
+cor.test(cR, adR)
+cor.test(cR, pdR)
+cor.test(c1R, eoR)
+cor.test(c1R, idR)
+cor.test(c1R, adR)
+cor.test(c1R, pdR)
+cor.test(c2R, eoR)
+cor.test(c2R, idR)
+cor.test(c2R, adR)
+cor.test(c2R, pdR)
+cor.test(c3R, eoR)
+cor.test(c3R, idR)
+cor.test(c3R, adR)
+cor.test(c3R, pdR)
+cor.test(c4R, eoR)
+cor.test(c4R, idR)
+cor.test(c4R, adR)
+cor.test(c4R, pdR)
+cor.test(c5R, eoR)
+cor.test(c5R, idR)
+cor.test(c5R, adR)
+cor.test(c5R, pdR)
+
+
+#cor.test4 - p / eoR
+
+cor.test(pR, eoR)
+cor.test(pR, adR)
+cor.test(pR, idR)
+cor.test(pR, pdR)
+cor.test(p1R, eoR)
+cor.test(p1R, idR)
+cor.test(p1R, adR)
+cor.test(p1R, pdR)
+cor.test(p2R, eoR)
+cor.test(p2R, idR)
+cor.test(p2R, adR)
+cor.test(p2R, pdR)
+cor.test(p3R, eoR)
+cor.test(p3R, idR)
+cor.test(p3R, adR)
+cor.test(p3R, pdR)
+
+
+lavInspect(cfa.fit_R, what="cor.lv")
+a <- lavInspect(cfa.fit_R, what="cor.lv")
+a
+corr.test(a)
+
+lavInspect(sem.fit_R, what="cor.all")
+b <- lavInspect(sem.fit_R, what="cor.all")
+b
+corr.test(b)
+
+#sem.ROK
+sem.ROK <-  "
+          c1 =~ c11+c12+c13+c14+c15+c16
+          c2 =~ c21+c22+c23+c24+c25+c26
+          c3 =~ c31+c32+c33+c34+c35+c36
+          c4 =~ c41+c42+c43+c44+c45+c46
+          c5 =~ c51+c52+c53+c54+c55+c56
+          ROKC =~ c1+c2+c3+c4+c5
+          
+          p1 =~ p11+p12+p13
+            p2 =~ p21+p22+p23
+            p3 =~ p31+p32+p33
+            EP =~ p1+p2+p3
+            p2 ~~ 0.05*p2
+            p3 ~~ 0.05*p3
+            p11 ~~ p13
+            p21 ~~ p23
+            p31 ~~ p33
+
+          
+          ad1 =~ ad11+ad12+ad13
+          ad2 =~ ad21+ad22+ad23
+          ad3 =~ ad31+ad32+ad33
+          ad4 =~ ad41+ad42+ad43
+          ad =~ ad1+ad2+ad3+ad4
+          pd =~ pd1+pd2+pd3+pd4
+          id =~ id1+id2+id3+id4
+          EO =~ id+ad+pd
+          id ~~ 0.05*id
+          pd ~~ 0.05*pd
+          
+#reggresion          
+ EP ~ a*ROKC
+ EO ~ cp*ROKC + b*EP
+
+#mege
+ ab := a*b
+ c := cp + (a*b)"
+sem.fit <- sem(sem.ROK, data = ROKdata,estimator = "MLM") 
+#se = "bootstrap", bootstrap = 50L
+summary(sem.fit, fit.measures=TRUE, standardized = TRUE)
+
+#sem.ROK2
+sem.ROK2 <-  "
+          c1 =~ c11+c12+c13+c14+c15+c16
+          c2 =~ c21+c22+c23+c24+c25+c26
+          c3 =~ c31+c32+c33+c34+c35+c36
+          c4 =~ c41+c42+c43+c44+c45+c46
+          c5 =~ c51+c52+c53+c54+c55+c56
+          ROKC =~ c1+c2+c3+c4+c5
+          
+          p1 =~ p11+p12+p13
+            p2 =~ p21+p22+p23
+            p3 =~ p31+p32+p33
+            EP =~ p1+p2+p3
+            p2 ~~ 0.05*p2
+            p3 ~~ 0.05*p3
+            p11 ~~ p13
+            p21 ~~ p23
+            p31 ~~ p33
+
+          
+          ad1 =~ ad11+ad12+ad13
+          ad2 =~ ad21+ad22+ad23
+          ad3 =~ ad31+ad32+ad33
+          ad4 =~ ad41+ad42+ad43
+          ad =~ ad1+ad2+ad3+ad4
+          pd =~ pd1+pd2+pd3+pd4
+          id =~ id1+id2+id3+id4
+          EO =~ id+ad+pd
+          id ~~ 0.05*id
+          pd ~~ 0.05*pd
+          
+#reggresion          
+ EP ~ a*ROKC
+ EO ~ b*EP
+
+#mege
+ ab := a*b"
+
+sem.fit2 <- sem(sem.ROK2, data = ROKdata,estimator = "MLM") 
+#se = "bootstrap", bootstrap = 50L
+summary(sem.fit2, fit.measures=TRUE, standardized = TRUE)
+
+diagram_sem <- semPlot::semPaths(sem.fit2, whatLabels = "std", intercepts = FALSE,
+                                 style = "lisrel",
+                                 nCharNodes = 0,
+                                 nCharEdges = 0,
+                                 edge.color = "blue",
+                                 curveAdjacent = TRUE, title = TRUE,
+                                 layout = "tree", curvePivot = TRUE)
+
+anova(sem.fit, sem.fit2, estimator = "MLM")
+
+
+#sobel test
+## Sobel Test
+a = 0.267 ; b = 0.359
+s_a = 0.060 ;  s_b = 0.057
+z = a * b / sqrt(b^2 * s_a^2 + a^2 * s_b^2)
+z
+
+2 * pnorm(z, lower.tail = F)
+
+install.packages("mediation")
+
+library(mediation)
+
+
+
+##  mediate
+parameterestimates(sem.fit, boot.ci.type = "bca.simple", standardized = TRUE) %>%
+  kable(digits = 2, format = "markdown")
+
+
+#sem.model
+
+sem.ROK_R <- "
+          ROKC =~ c1R+c2R+c3R+c4R+c5R
+          
+          EP =~ p1R+p2R+p3R
+          
+          EO =~ idR+adR+pdR
+          
+#reggresion          
+ EP ~ a*ROKC
+ EO ~ cp*ROKC + b*EP
+
+#M.E
+ ab := a*b
+ c := cp + (a*b)"
+
+sem.fit_R <- sem(sem.ROK_R, data = ROKdata,estimator = "MLM") 
+#se = "bootstrap", bootstrap = 50L
+summary(sem.fit_R, fit.measures=TRUE, standardized = TRUE)
+
+#graphic_sem
+diagram_sem <- semPlot::semPaths(sem.fit, whatLabels = "std", intercepts = FALSE,
+                                 style = "lisrel",
+                                 nCharNodes = 0,
+                                 nCharEdges = 0,
+                                 edge.color = "blue",
+                                 curveAdjacent = TRUE, title = TRUE,
+                                 layout = "tree", curvePivot = TRUE)
+
+
+#sobel test
+## Sobel Test
+a = 0.269 ; b = 0.385
+s_a = 0.061 ;  s_b = 0.059
+z = a * b / sqrt(b^2 * s_a^2 + a^2 * s_b^2)
+z
+
+2 * pnorm(z, lower.tail = F)
+
+install.packages("mediation")
+
+library(mediation)
+
+
+
+##  mediate
+parameterestimates(sem.fit_R, boot.ci.type = "bca.simple", standardized = TRUE) %>%
+kable(digits = 2, format = "markdown")
+
