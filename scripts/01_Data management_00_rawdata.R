@@ -513,6 +513,7 @@ diagra_ROK <- semPlot::semPaths(cfa_indepen_out, whatLabels = "std", intercepts 
 
 ### Academic Resilience
 df_cron <- read.csv("D:/HYEM'S/GraduatedSchool/PROJECTS/MyProjects/GraduationThesis/datasets/01_coding_05_full_1234_A.csv")
+df_na_cron <- na.omit(df_cron)
 names(df_cron)
 cronbach(df_cron[,44:52])
 cronbach(df_cron[,53:61])
@@ -722,8 +723,7 @@ sem_model_3 <-
   AcademicR ~ PersonalR'
 
 out_3 <- sem(sem_model_3, df_na_b)
-fitMeasures(out_3 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr")) %>%
-  kable (format="pandoc",caption = "Model fit information")
+fitMeasures(out_3 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr"))
 summary(out_3, fit.measures=T, standardized=T, rsquare=T)
 
 #graphic
@@ -743,12 +743,11 @@ sem_model_3_1 <-
   UnivSatis =~ UnivEduSatis_liberalarts + UnivEduSatis_major + UnivEduSatis_infra
   
   UnivSatis ~ PersonalR + AcademicR
-  GPA_5 ~ PersonalR + AcademicR
+  GPA_5_scaled ~ PersonalR + AcademicR
   AcademicR ~ PersonalR'
 
 out_3_1 <- sem(sem_model_3_1, df_na_b)
-fitMeasures(out_3_1 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr")) %>%
-  kable (format="pandoc",caption = "Model fit information")
+fitMeasures(out_3_1 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr"))
 summary(out_3_1, fit.measures=T, standardized=T, rsquare=T)
 
 
@@ -764,8 +763,7 @@ sem_model_4_1 <-
   AcademicR ~ PersonalR'
 
 out_4_1 <- sem(sem_model_4_1, df_na_b)
-fitMeasures(out_4_1 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr")) %>%
-  kable (format="pandoc",caption = "Model fit information")
+fitMeasures(out_4_1 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr"))
 summary(out_4_1, fit.measures=T, standardized=T, rsquare=T)
 
 
@@ -773,13 +771,12 @@ sem_model_4_2 <-
   'PersonalR =~ R_friend + R_prof + R_parent
   AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
   UnivSatis =~ UnivEduSatis_liberalarts + UnivEduSatis_major + UnivEduSatis_infra
-  UnivEduAchive =~ UnivSatis + GPA_new
+  UnivEduAchive =~ UnivSatis + GPA_5_scaled
   UnivEduAchive ~ PersonalR + AcademicR
   AcademicR ~ PersonalR'
 
 out_4_2 <- sem(sem_model_4_2, df_na_b)
-fitMeasures(out_4_2 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr")) %>%
-  kable (format="pandoc",caption = "Model fit information")
+fitMeasures(out_4_2 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr"))
 summary(out_4_2, fit.measures=T, standardized=T, rsquare=T)
 
 
@@ -794,8 +791,7 @@ sem_model_5_1 <-
   AcademicR ~ PersonalR'
 
 out_5_1 <- sem(sem_model_5_1, df_na_b)
-fitMeasures(out_5_1 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr")) %>%
-  kable (format="pandoc",caption = "Model fit information")
+fitMeasures(out_5_1 ,c("chisq","df","pvalue","cfi","tli","rmsea","rmsea.ci.lower","rmsea.ci.upper","rmsea.pvalue","srmr"))
 summary(out_5_1, fit.measures=T, standardized=T, rsquare=T)
 
 
@@ -891,7 +887,7 @@ sem_model_6_2 <-
   
   PersonalR =~ R_friend + R_prof + R_parent
   AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
-  UnivEduAchive =~ UnivEduSatis + GPA_5
+  UnivEduAchive =~ UnivEduSatis + GPA_5_scaled
   
   UnivEduAchive ~ PersonalR + AcademicR
   AcademicR ~ PersonalR'
@@ -930,7 +926,7 @@ sem_model_7 <-
   UnivEduSatis =~ UnivEduSatis_liberalart + UnivEduSatis_major + UnivEduSatis_infra
   
   AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
-  UnivEduAchive =~ UnivEduSatis + GPA_5
+  UnivEduAchive =~ UnivEduSatis + GPA_5_scaled
   
   UnivEduAchive ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'
@@ -946,7 +942,7 @@ summary(out_7, fit.measures=T, standardized=T, rsquare=T)
 sem_model_8 <-
   'AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
   UnivEduSatis =~ UnivEduSatis_liberalarts + UnivEduSatis_major + UnivEduSatis_infra
-  UnivEduAchive =~ UnivEduSatis + GPA_5
+  UnivEduAchive =~ UnivEduSatis + GPA_5_scaled
   
   UnivEduAchive ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'
@@ -961,7 +957,7 @@ summary(out_8, fit.measures=T, standardized=T, rsquare=T)
 ### UnivSatis together_depends which PersonalRelationship
 sem_model_9 <-
   'AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
-  UnivEduAchive =~ UnivEduSatis_total_a + GPA_5
+  UnivEduAchive =~ UnivEduSatis_total_a + GPA_5_scaled
   
   UnivEduAchive ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'
@@ -995,7 +991,7 @@ sem_model_10 <-
   AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
   
   UnivEduSatis ~ R_friend + R_prof + R_parent + AcademicR
-  GPA_5 ~ R_friend + R_prof + R_parent + AcademicR
+  GPA_5_scaled ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'
 
 out_10 <- sem(sem_model_10, df_na_a)
@@ -1012,7 +1008,7 @@ sem_model_11 <-
   UnivEduSatis =~ UnivEduSatis_liberalarts + UnivEduSatis_major + UnivEduSatis_infra
   
   UnivEduSatis ~ R_friend + R_prof + R_parent + AcademicR
-  GPA_5 ~ R_friend + R_prof + R_parent + AcademicR
+  GPA_5_scaled ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'
 
 out_11 <- sem(sem_model_11, df_na_b)
@@ -1028,7 +1024,7 @@ sem_model_12 <-
   'AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
   
   UnivEduSatis_total_a ~ R_friend + R_prof + R_parent + AcademicR
-  GPA_5 ~ R_friend + R_prof + R_parent + AcademicR
+  GPA_5_scaled ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'
 
 out_12 <- sem(sem_model_12, df_na_b)
@@ -1064,7 +1060,7 @@ sem_model_9 <-
   AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
   
   UnivEduSatis ~ R_friend + R_prof + R_parent + AcademicR
-  GPA_5 ~ R_friend + R_prof + R_parent + AcademicR
+  GPA_5_scaled ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'
 
 out_9 <- sem(sem_model_9, df_na_a)
@@ -1122,7 +1118,7 @@ sem_model_11 <-
   UnivEduSatis =~ UnivEduSatis_liberalart + UnivEduSatis_major + UnivEduSatis_infra
   
   AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
-  UnivEduAchive =~ UnivEduSatis + GPA_5
+  UnivEduAchive =~ UnivEduSatis + GPA_5_scaled
   
   UnivEduAchive ~ R_friend + R_prof + R_parent + AcademicR
   AcademicR ~ R_friend + R_prof + R_parent'

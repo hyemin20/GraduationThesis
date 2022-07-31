@@ -110,10 +110,7 @@ sem.med <-
   # regressions
   AcademicR ~ a*PersonalR
   UnivEduAchive ~ c*PersonalR + b*AcademicR
-  
-  R_friend ~~ R_prof
-  R_prof ~~ R_parent
-  
+
   # indirect effect: ab
   ab := a*b
   # total effect: c
@@ -137,8 +134,12 @@ semPaths(fit.med, what="std", layout="tree", edge.label.cex=1,
          style="lisrel", curvature=2, title = TRUE,
          rotation = 2)
 
-a = 0.235 ; b = 0.729 
-s_a = 0.045 ;  s_b = 0.352   
+a = 0.238 ; b = 0.669
+s_a = 0.060 ;  s_b = 0.215
+
+
+a = 0.180 ; b = 0.848
+s_a = 0.043 ;  s_b = 0.217
 z = a * b / sqrt(b^2 * s_a^2 + a^2 * s_b^2)
 z
 
@@ -321,6 +322,7 @@ parameterEstimates(fit.mod.med_3, standardized=TRUE)
 ###' 
 ###'
 
+nrow(df_na_a)
 
 
 ### sensitive analysis_1
@@ -337,16 +339,13 @@ sen_model <-
   'PersonalR =~ R_friend + R_prof + R_parent
   AcademicR =~ Resili_SelfEffi + Resili_SituJuge + Resili_Resource + Resili_Vital + Resili_FutureOrien
   UnivEduAchive =~ UnivEduSatis_total_a + GPA_5_scaled
-  
+    
   PersonalR ~ phantom1*phantom
   AcademicR ~ phantom2*phantom
   
   AcademicR ~ PersonalR
   UnivEduAchive ~ PersonalR + AcademicR
   
-  R_friend ~~ R_prof
-  R_prof ~~ R_parent
-
   phantom =~ 0
   phantom ~~ 1*phantom'
 
@@ -357,7 +356,7 @@ sem_path <-
 
 sens_analysis <- sa.aco(data = df_na_b,
                  sample.cov = full,
-                 sample.nobs = 243,
+                 sample.nobs = 239,
                  model = sem_model,
                  opt.fun = 3,
                  rate.of.conv = 0.00000001,
@@ -367,7 +366,4 @@ sens_analysis <- sa.aco(data = df_na_b,
 sens_tables <- sens.tables(sens_analysis)
 sens_tables$sens.summary
 sens_tables$phan.paths
-
-
-### sensitive analysis_2
 
