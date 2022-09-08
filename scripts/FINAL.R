@@ -1284,9 +1284,15 @@ sem_model <-
   UnivEduAchive =~ UnivEduSatis_total_a + GPA_new_5
   
   # regressions
+<<<<<<< HEAD
 PersonalR ~ C1*GradeF + C2*HregionF
 UnivEduAchive ~ c*PersonalR + b*AcademicR +  C3*HregionF + C4*GradeF
 AcademicR ~ a*PersonalR + C5*HregionF + C6*GradeF'
+=======
+  PersonalR ~ C1*Grade + C4*Hregion
+  AcademicR ~ a*PersonalR + C2*Grade + C5*Hregion
+  UnivEduAchive ~ c*PersonalR + b*AcademicR +  C3*Grade + C5*Hregion'
+>>>>>>> edac05ab7620e409e4c8943fe3b171a8b1a39c12
 
 
 sen_model <- 
@@ -1299,9 +1305,15 @@ sen_model <-
   UnivEduAchive ~ phantom3*phantom
   
 
+<<<<<<< HEAD
 PersonalR ~ C1*GradeF + C2*HregionF
 UnivEduAchive ~ c*PersonalR + b*AcademicR +  C3*HregionF + C4*GradeF
 AcademicR ~ a*PersonalR + C5*HregionF + C6*GradeF
+=======
+  PersonalR ~ C1*Grade + C4*Hregion
+  AcademicR ~ a*PersonalR + C2*Grade + C5*Hregion
+  UnivEduAchive ~ c*PersonalR + b*AcademicR +  C3*Grade + C5*Hregion
+>>>>>>> edac05ab7620e409e4c8943fe3b171a8b1a39c12
   
   
   phantom =~ 0
@@ -1314,9 +1326,14 @@ my.sa <- sa.aco(model = sem_model, sens.model = sen_model,sample.cov = full,
                 sample.nobs = 230, opt.fun = 3, paths = c(13,16,17), k = 5, max.iter = 1000)
 
 sem_path <-
+<<<<<<< HEAD
   'PersonalR ~ C1*GradeF + C2*HregionF
 UnivEduAchive ~ c*PersonalR + b*AcademicR +  C3*HregionF + C4*GradeF
 AcademicR ~ a*PersonalR + C5*HregionF + C6*GradeF'
+=======
+  'AcademicR ~ PersonalR
+  UnivEduAchive ~ PersonalR + AcademicR'
+>>>>>>> edac05ab7620e409e4c8943fe3b171a8b1a39c12
 
 
 sens_analysis <- sa.aco(data = df_na_b,
